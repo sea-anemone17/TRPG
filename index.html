@@ -5,9 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ORPG 판정기</title>
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -16,7 +14,7 @@
       justify-content: center;
       align-items: center;
       background: linear-gradient(135deg, #f5efff, #eef6ff, #fff7fb);
-      font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+      font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
       color: #2d2d38;
       padding: 24px;
     }
@@ -24,8 +22,7 @@
     .card {
       width: 100%;
       max-width: 560px;
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.9);
       border-radius: 24px;
       padding: 28px;
       box-shadow: 0 18px 40px rgba(110, 92, 180, 0.15);
@@ -55,11 +52,6 @@
       outline: none;
     }
 
-    input:focus {
-      border-color: #8c7cff;
-      box-shadow: 0 0 0 4px rgba(140, 124, 255, 0.12);
-    }
-
     button {
       width: 100%;
       padding: 15px 18px;
@@ -70,16 +62,7 @@
       font-size: 1rem;
       font-weight: 800;
       cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
       box-shadow: 0 10px 24px rgba(123, 107, 202, 0.25);
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-    }
-
-    button:active {
-      transform: translateY(1px) scale(0.99);
     }
 
     .result-box {
@@ -93,13 +76,11 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      text-align: center;
     }
 
     .number {
       font-size: 3rem;
       font-weight: 900;
-      letter-spacing: -0.04em;
       margin-bottom: 8px;
     }
 
@@ -112,6 +93,8 @@
       margin-top: 10px;
       font-size: 0.94rem;
       color: #666b7d;
+      text-align: center;
+      line-height: 1.5;
     }
 
     .pop {
@@ -131,17 +114,9 @@
     }
 
     @keyframes pop {
-      0% {
-        transform: scale(0.88);
-        opacity: 0;
-      }
-      60% {
-        transform: scale(1.05);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(1);
-      }
+      0% { transform: scale(0.88); opacity: 0; }
+      60% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); }
     }
 
     @keyframes shake {
@@ -155,7 +130,6 @@
   </style>
 </head>
 <body>
-
   <div class="card">
     <h1>🎲 ORPG 1d100 판정기</h1>
 
@@ -169,7 +143,7 @@
       <input id="bp" type="number" min="-2" max="2" value="0">
     </div>
 
-    <button onclick="roll()">굴리기</button>
+    <button id="rollButton">굴리기</button>
 
     <div class="result-box" id="resultBox">
       <div class="number" id="number">--</div>
@@ -180,7 +154,14 @@
 
   <script>
     function sleep(ms) {
-      return new Promise(resolve => setTimeout(resolve, ms));
+      return new Promise(function(resolve) {
+        setTimeout(resolve, ms);
+      });
+    }
+
+    function makeD100(tens, units) {
+      if (tens === 0 && units === 0) return 100;
+      return tens + units;
     }
 
     async function roll() {
@@ -211,15 +192,14 @@
       }
 
       const units = Math.floor(Math.random() * 10);
-      let tensList = [];
+      const tensList = [];
 
       for (let i = 0; i <= Math.abs(bp); i++) {
         tensList.push(Math.floor(Math.random() * 10) * 10);
       }
 
-      let results = tensList.map(t => {
-        if (t === 0 && units === 0) return 100;
-        return t + units;
+      const results = tensList.map(function(t) {
+        return makeD100(t, units);
       });
 
       let final;
@@ -230,15 +210,17 @@
       let text;
       if (final === 1) text = "🌟 대성공";
       else if (final === 100) text = "💥 대실패";
-      else if (final <= stat / 5) text = "✨ 극단적 성공";
-      else if (final <= stat / 2) text = "✅ 어려운 성공";
+      else if (final <= Math.floor(stat / 5)) text = "✨ 극단적 성공";
+      else if (final <= Math.floor(stat / 2)) text = "✅ 어려운 성공";
       else if (final <= stat) text = "☑️ 보통 성공";
       else text = "❌ 실패";
 
       numberEl.innerText = final;
       judgeEl.innerText = text;
       subtextEl.innerText =
-        `1의 자리: ${units} | 10의 자리 후보: ${tensList.join(", ")} | 결과 후보: ${results.join(", ")}`;
+        "1의 자리: " + units +
+        " | 10의 자리 후보: " + tensList.join(", ") +
+        " | 결과 후보: " + results.join(", ");
 
       void resultBox.offsetWidth;
       resultBox.classList.add("pop");
@@ -249,7 +231,8 @@
         resultBox.classList.add("glow-success");
       }
     }
-  </script>
 
+    document.getElementById("rollButton").addEventListener("click", roll);
+  </script>
 </body>
 </html>
