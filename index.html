@@ -21,7 +21,7 @@
 
     .card {
       width: 100%;
-      max-width: 620px;
+      max-width: 700px;
       background: rgba(255, 255, 255, 0.9);
       border-radius: 24px;
       padding: 28px;
@@ -50,7 +50,7 @@
       font-weight: 700;
     }
 
-    input {
+    input, select {
       width: 100%;
       padding: 14px 16px;
       border: 1px solid #d8dcec;
@@ -60,9 +60,21 @@
       background: white;
     }
 
-    input:focus {
+    input:focus, select:focus {
       border-color: #8c7cff;
       box-shadow: 0 0 0 4px rgba(140, 124, 255, 0.12);
+    }
+
+    .section {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px dashed #d8dcec;
+    }
+
+    .section-title {
+      margin: 0 0 14px;
+      font-size: 1rem;
+      font-weight: 800;
     }
 
     .button-row {
@@ -73,12 +85,12 @@
     }
 
     button {
-      padding: 15px 18px;
+      padding: 13px 18px;
       border: none;
       border-radius: 999px;
       background: linear-gradient(135deg, #8c7cff, #6da8ff);
       color: white;
-      font-size: 1rem;
+      font-size: 0.96rem;
       font-weight: 800;
       cursor: pointer;
       box-shadow: 0 10px 24px rgba(123, 107, 202, 0.25);
@@ -157,12 +169,12 @@
       font-weight: 800;
     }
 
-    .history-list {
+    .history-list, .skill-list {
       display: grid;
       gap: 10px;
     }
 
-    .history-item {
+    .history-item, .skill-item {
       background: #f7f8ff;
       border: 1px solid #e4e7f5;
       border-radius: 16px;
@@ -175,6 +187,23 @@
     .history-empty {
       color: #7b8195;
       font-size: 0.93rem;
+    }
+
+    .skill-chip-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .skill-chip {
+      background: #eef1ff;
+      color: #4e5680;
+      border: 1px solid #dfe4f7;
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.9rem;
     }
 
     .pop {
@@ -209,30 +238,17 @@
     }
 
     @media (max-width: 640px) {
-      .card {
-        padding: 20px;
-      }
-
-      .number {
-        font-size: 2.4rem;
-      }
-
-      .button-row {
-        flex-direction: column;
-      }
-
-      button {
-        width: 100%;
-      }
+      .card { padding: 20px; }
+      .number { font-size: 2.4rem; }
+      .button-row { flex-direction: column; }
+      button { width: 100%; }
     }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>🎲 ORPG 1d100 판정기</h1>
-    <p class="subtitle">
-      판정 이름, 기능치, 보너스/패널티를 입력하고 주사위를 굴려 보세요.
-    </p>
+    <p class="subtitle">판정 이름, 기능치, 보너스/패널티를 입력하고 주사위를 굴려 보세요.</p>
 
     <div class="field">
       <label for="statName">판정 이름</label>
@@ -252,6 +268,34 @@
     <div class="button-row">
       <button id="rollButton">굴리기</button>
       <button class="sub-button" id="clearHistoryButton" type="button">기록 지우기</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">캐릭터 저장</div>
+
+      <div class="field">
+        <label for="characterName">캐릭터 이름</label>
+        <input id="characterName" type="text" placeholder="예: Hazel, 니브, A">
+      </div>
+
+      <div class="field">
+        <label for="characterSelect">저장된 캐릭터</label>
+        <select id="characterSelect">
+          <option value="">캐릭터를 선택하세요</option>
+        </select>
+      </div>
+
+      <div class="button-row">
+        <button id="saveSkillButton" type="button">현재 기능 저장</button>
+        <button class="sub-button" id="deleteCharacterButton" type="button">선택 캐릭터 삭제</button>
+      </div>
+
+      <div class="field" style="margin-top:14px;">
+        <label>저장된 기능</label>
+        <div class="skill-list" id="savedSkills">
+          <div class="history-empty">아직 저장된 기능이 없습니다.</div>
+        </div>
+      </div>
     </div>
 
     <div class="result-box" id="resultBox">
@@ -276,6 +320,7 @@
 
   <script>
     const HISTORY_KEY = "orpg_d100_history";
+    const CHARACTER_KEY = "orpg_d100_characters";
 
     function sleep(ms) {
       return new Promise(function(resolve) {
@@ -308,8 +353,7 @@
         const raw = localStorage.getItem(HISTORY_KEY);
         if (!raw) return [];
         const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed)) return [];
-        return parsed;
+        return Array.isArray(parsed) ? parsed : [];
       } catch (error) {
         return [];
       }
@@ -317,6 +361,21 @@
 
     function saveHistory(history) {
       localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    }
+
+    function loadCharacters() {
+      try {
+        const raw = localStorage.getItem(CHARACTER_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function saveCharacters(characters) {
+      localStorage.setItem(CHARACTER_KEY, JSON.stringify(characters));
     }
 
     function renderHistory() {
@@ -337,6 +396,110 @@
           </div>
         `;
       }).join("");
+    }
+
+    function renderCharacterSelect() {
+      const select = document.getElementById("characterSelect");
+      const characters = loadCharacters();
+      const names = Object.keys(characters).sort();
+
+      select.innerHTML = '<option value="">캐릭터를 선택하세요</option>' +
+        names.map(function(name) {
+          return `<option value="${name}">${name}</option>`;
+        }).join("");
+    }
+
+    function renderSavedSkills() {
+      const savedSkills = document.getElementById("savedSkills");
+      const selectedCharacter = document.getElementById("characterSelect").value;
+      const characters = loadCharacters();
+
+      if (!selectedCharacter || !characters[selectedCharacter]) {
+        savedSkills.innerHTML = '<div class="history-empty">아직 저장된 기능이 없습니다.</div>';
+        return;
+      }
+
+      const skills = characters[selectedCharacter];
+      const entries = Object.entries(skills);
+
+      if (entries.length === 0) {
+        savedSkills.innerHTML = '<div class="history-empty">아직 저장된 기능이 없습니다.</div>';
+        return;
+      }
+
+      savedSkills.innerHTML = `
+        <div class="skill-chip-wrap">
+          ${entries.map(function(entry) {
+            const skillName = entry[0];
+            const skillValue = entry[1];
+            return `<button class="skill-chip" onclick="applySkill('${selectedCharacter}', '${skillName}')">${skillName} ${skillValue}</button>`;
+          }).join("")}
+        </div>
+      `;
+    }
+
+    function applySkill(characterName, skillName) {
+      const characters = loadCharacters();
+      const value = characters[characterName][skillName];
+      document.getElementById("characterName").value = characterName;
+      document.getElementById("statName").value = skillName;
+      document.getElementById("stat").value = value;
+    }
+
+    function saveCurrentSkill() {
+      const characterNameInput = document.getElementById("characterName").value.trim();
+      const statName = document.getElementById("statName").value.trim();
+      const stat = parseInt(document.getElementById("stat").value);
+
+      if (!characterNameInput) {
+        alert("캐릭터 이름을 입력해 주세요.");
+        return;
+      }
+
+      if (!statName) {
+        alert("판정 이름을 입력해 주세요.");
+        return;
+      }
+
+      if (isNaN(stat) || stat < 1 || stat > 99) {
+        alert("기능치는 1~99 사이로 입력해 주세요.");
+        return;
+      }
+
+      const characters = loadCharacters();
+
+      if (!characters[characterNameInput]) {
+        characters[characterNameInput] = {};
+      }
+
+      characters[characterNameInput][statName] = stat;
+      saveCharacters(characters);
+
+      renderCharacterSelect();
+      document.getElementById("characterSelect").value = characterNameInput;
+      renderSavedSkills();
+      alert("저장되었습니다.");
+    }
+
+    function deleteSelectedCharacter() {
+      const select = document.getElementById("characterSelect");
+      const selectedCharacter = select.value;
+
+      if (!selectedCharacter) {
+        alert("삭제할 캐릭터를 선택해 주세요.");
+        return;
+      }
+
+      const ok = confirm(selectedCharacter + " 캐릭터를 삭제할까요?");
+      if (!ok) return;
+
+      const characters = loadCharacters();
+      delete characters[selectedCharacter];
+      saveCharacters(characters);
+
+      renderCharacterSelect();
+      renderSavedSkills();
+      document.getElementById("characterName").value = "";
     }
 
     function clearHistory() {
@@ -436,8 +599,17 @@
 
     document.getElementById("rollButton").addEventListener("click", roll);
     document.getElementById("clearHistoryButton").addEventListener("click", clearHistory);
+    document.getElementById("saveSkillButton").addEventListener("click", saveCurrentSkill);
+    document.getElementById("deleteCharacterButton").addEventListener("click", deleteSelectedCharacter);
+    document.getElementById("characterSelect").addEventListener("change", function() {
+      const selected = this.value;
+      document.getElementById("characterName").value = selected;
+      renderSavedSkills();
+    });
 
     renderHistory();
+    renderCharacterSelect();
+    renderSavedSkills();
   </script>
 </body>
 </html>
