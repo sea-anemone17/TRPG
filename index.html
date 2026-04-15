@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ORPG 1d100 판정기</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORPG 판정기</title>
   <style>
     * {
       box-sizing: border-box;
@@ -11,428 +11,245 @@
 
     body {
       margin: 0;
-      font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-      background: linear-gradient(135deg, #f6f0ff 0%, #eef6ff 50%, #fff6f9 100%);
       min-height: 100vh;
-      color: #2b2b35;
       display: flex;
       justify-content: center;
       align-items: center;
+      background: linear-gradient(135deg, #f5efff, #eef6ff, #fff7fb);
+      font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+      color: #2d2d38;
       padding: 24px;
     }
 
-    .container {
-      width: 100%;
-      max-width: 720px;
-    }
-
     .card {
-      background: rgba(255, 255, 255, 0.82);
-      backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.7);
-      border-radius: 28px;
-      box-shadow: 0 20px 50px rgba(121, 107, 179, 0.15);
+      width: 100%;
+      max-width: 560px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
       padding: 28px;
+      box-shadow: 0 18px 40px rgba(110, 92, 180, 0.15);
     }
 
-    .title {
-      margin: 0 0 8px;
-      font-size: 2rem;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-    }
-
-    .subtitle {
+    h1 {
       margin: 0 0 24px;
-      color: #666a7a;
-      font-size: 0.98rem;
-      line-height: 1.5;
-    }
-
-    .grid {
-      display: grid;
-      gap: 16px;
+      font-size: 2rem;
     }
 
     .field {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+      margin-bottom: 16px;
     }
 
     label {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #45485a;
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 700;
     }
 
     input {
       width: 100%;
       padding: 14px 16px;
-      border-radius: 16px;
-      border: 1px solid #d9dcec;
-      background: #ffffff;
+      border: 1px solid #d8dcec;
+      border-radius: 14px;
       font-size: 1rem;
       outline: none;
-      transition: 0.2s;
     }
 
     input:focus {
-      border-color: #9f8cff;
-      box-shadow: 0 0 0 4px rgba(159, 140, 255, 0.15);
+      border-color: #8c7cff;
+      box-shadow: 0 0 0 4px rgba(140, 124, 255, 0.12);
     }
 
-    .quick-buttons {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 6px;
-    }
-
-    .quick-buttons button,
-    .main-button,
-    .sub-button {
+    button {
+      width: 100%;
+      padding: 15px 18px;
       border: none;
       border-radius: 999px;
-      padding: 12px 18px;
-      font-size: 0.95rem;
-      font-weight: 700;
+      background: linear-gradient(135deg, #8c7cff, #6da8ff);
+      color: white;
+      font-size: 1rem;
+      font-weight: 800;
       cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
-    }
-
-    .quick-buttons button {
-      background: #f2efff;
-      color: #5f52a8;
-    }
-
-    .quick-buttons button.active {
-      background: linear-gradient(135deg, #8c7cff, #6ba8ff);
-      color: white;
-      box-shadow: 0 10px 20px rgba(121, 107, 179, 0.22);
-    }
-
-    .main-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 22px;
-    }
-
-    .main-button {
-      background: linear-gradient(135deg, #8c7cff, #6ba8ff);
-      color: white;
-      box-shadow: 0 12px 24px rgba(121, 107, 179, 0.24);
-    }
-
-    .sub-button {
-      background: #f4f5fb;
-      color: #55596b;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 10px 24px rgba(123, 107, 202, 0.25);
     }
 
     button:hover {
       transform: translateY(-1px);
     }
 
-    .result-card {
+    button:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    .result-box {
       margin-top: 24px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,248,255,0.92));
-      border: 1px solid #e4e7f3;
-      border-radius: 24px;
-      padding: 22px;
-    }
-
-    .result-top {
+      min-height: 120px;
+      border-radius: 20px;
+      padding: 20px;
+      background: linear-gradient(180deg, #ffffff, #f7f8ff);
+      border: 1px solid #e5e8f3;
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .badge {
-      display: inline-flex;
+      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: #f3f5ff;
-      color: #535a7d;
-      font-size: 0.88rem;
-      font-weight: 700;
+      text-align: center;
     }
 
-    .big-result {
-      font-size: 2.3rem;
+    .number {
+      font-size: 3rem;
       font-weight: 900;
-      letter-spacing: -0.03em;
-      margin: 6px 0 10px;
+      letter-spacing: -0.04em;
+      margin-bottom: 8px;
     }
 
     .judge {
-      font-size: 1.18rem;
+      font-size: 1.15rem;
       font-weight: 800;
-      margin-bottom: 14px;
     }
 
-    .detail {
-      display: grid;
-      gap: 10px;
-      color: #5d6276;
-      font-size: 0.96rem;
-      line-height: 1.5;
+    .subtext {
+      margin-top: 10px;
+      font-size: 0.94rem;
+      color: #666b7d;
     }
 
-    .history {
-      margin-top: 20px;
-      padding-top: 18px;
-      border-top: 1px dashed #d9ddec;
+    .pop {
+      animation: pop 0.35s ease;
     }
 
-    .history h3 {
-      margin: 0 0 12px;
-      font-size: 1rem;
+    .shake {
+      animation: shake 0.45s ease;
     }
 
-    .history-list {
-      display: grid;
-      gap: 10px;
+    .glow-success {
+      box-shadow: 0 0 0 4px rgba(130, 255, 190, 0.18), 0 18px 40px rgba(80, 190, 130, 0.18);
     }
 
-    .history-item {
-      background: #f8f9ff;
-      border: 1px solid #e6e9f5;
-      border-radius: 16px;
-      padding: 12px 14px;
-      font-size: 0.92rem;
-      color: #50556a;
+    .glow-fail {
+      box-shadow: 0 0 0 4px rgba(255, 140, 140, 0.18), 0 18px 40px rgba(220, 90, 90, 0.18);
     }
 
-    .error {
-      margin-top: 14px;
-      color: #c0395f;
-      font-size: 0.92rem;
-      font-weight: 700;
-    }
-
-    @media (max-width: 640px) {
-      .card {
-        padding: 20px;
-        border-radius: 22px;
+    @keyframes pop {
+      0% {
+        transform: scale(0.88);
+        opacity: 0;
       }
-
-      .title {
-        font-size: 1.6rem;
+      60% {
+        transform: scale(1.05);
+        opacity: 1;
       }
-
-      .big-result {
-        font-size: 1.9rem;
+      100% {
+        transform: scale(1);
       }
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); }
+      60% { transform: translateX(-4px); }
+      80% { transform: translateX(4px); }
+      100% { transform: translateX(0); }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="card">
-      <h1 class="title">🎲 ORPG 1d100 판정기</h1>
-      <p class="subtitle">
-        기능치와 보너스/패널티를 입력하고 바로 판정해 보세요.
-        낮을수록 좋은 시스템 기준으로 계산됩니다.
-      </p>
 
-      <div class="grid">
-        <div class="field">
-          <label for="statName">판정 이름</label>
-          <input id="statName" type="text" placeholder="예: 관찰, 회피, 설득" />
-        </div>
+  <div class="card">
+    <h1>🎲 ORPG 1d100 판정기</h1>
 
-        <div class="field">
-          <label for="stat">기능치 (1~99)</label>
-          <input id="stat" type="number" min="1" max="99" placeholder="예: 60" />
-        </div>
+    <div class="field">
+      <label for="stat">기능치 (1~99)</label>
+      <input id="stat" type="number" min="1" max="99" placeholder="예: 60">
+    </div>
 
-        <div class="field">
-          <label for="bp">보너스 / 패널티 (-2 ~ 2)</label>
-          <input id="bp" type="number" min="-2" max="2" value="0" />
-        </div>
-      </div>
+    <div class="field">
+      <label for="bp">보너스/패널티 (-2~2)</label>
+      <input id="bp" type="number" min="-2" max="2" value="0">
+    </div>
 
-      <div class="quick-buttons">
-        <button onclick="setBP(-2, this)">패널티 2</button>
-        <button onclick="setBP(-1, this)">패널티 1</button>
-        <button class="active" onclick="setBP(0, this)">일반</button>
-        <button onclick="setBP(1, this)">보너스 1</button>
-        <button onclick="setBP(2, this)">보너스 2</button>
-      </div>
+    <button onclick="roll()">굴리기</button>
 
-      <div class="main-actions">
-        <button class="main-button" onclick="roll()">판정 굴리기</button>
-        <button class="sub-button" onclick="clearHistory()">기록 지우기</button>
-      </div>
-
-      <div id="error" class="error"></div>
-
-      <div class="result-card">
-        <div class="result-top">
-          <span class="badge" id="badgeName">판정 이름 없음</span>
-          <span class="badge" id="badgeStat">기능치 -</span>
-          <span class="badge" id="badgeMode">일반</span>
-        </div>
-
-        <div class="big-result" id="finalValue">--</div>
-        <div class="judge" id="judgeText">아직 판정 전입니다.</div>
-
-        <div class="detail">
-          <div id="detail1">1의 자리: -</div>
-          <div id="detail2">10의 자리 후보: -</div>
-          <div id="detail3">가능한 결과값: -</div>
-        </div>
-
-        <div class="history">
-          <h3>최근 기록</h3>
-          <div id="historyList" class="history-list">
-            <div class="history-item">아직 기록이 없습니다.</div>
-          </div>
-        </div>
-      </div>
+    <div class="result-box" id="resultBox">
+      <div class="number" id="number">--</div>
+      <div class="judge" id="judge">아직 판정 전입니다.</div>
+      <div class="subtext" id="subtext">버튼을 눌러 주사위를 굴려 보세요.</div>
     </div>
   </div>
 
   <script>
-    let historyData = [];
-
-    function makeD100(tens, units) {
-      if (tens === 0 && units === 0) return 100;
-      return tens + units;
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    function judgeResult(final, stat) {
-      if (final === 1) return "🌟 대성공";
-      if (final === 100) return "💥 대실패";
-      if (final <= Math.floor(stat / 5)) return "✨ 극단적 성공";
-      if (final <= Math.floor(stat / 2)) return "✅ 어려운 성공";
-      if (final <= stat) return "☑️ 보통 성공";
-      return "❌ 실패";
-    }
+    async function roll() {
+      const stat = parseInt(document.getElementById("stat").value);
+      const bp = parseInt(document.getElementById("bp").value);
+      const numberEl = document.getElementById("number");
+      const judgeEl = document.getElementById("judge");
+      const subtextEl = document.getElementById("subtext");
+      const resultBox = document.getElementById("resultBox");
 
-    function modeText(bp) {
-      if (bp > 0) return `보너스 ${bp}`;
-      if (bp < 0) return `패널티 ${Math.abs(bp)}`;
-      return "일반";
-    }
-
-    function setBP(value, clickedButton) {
-      document.getElementById("bp").value = value;
-
-      const buttons = document.querySelectorAll(".quick-buttons button");
-      buttons.forEach(btn => btn.classList.remove("active"));
-      clickedButton.classList.add("active");
-    }
-
-    function syncQuickButtons() {
-      const bp = Number(document.getElementById("bp").value);
-      const buttons = document.querySelectorAll(".quick-buttons button");
-      buttons.forEach(btn => btn.classList.remove("active"));
-
-      const labels = {
-        "-2": "패널티 2",
-        "-1": "패널티 1",
-        "0": "일반",
-        "1": "보너스 1",
-        "2": "보너스 2"
-      };
-
-      buttons.forEach(btn => {
-        if (btn.textContent === labels[String(bp)]) {
-          btn.classList.add("active");
-        }
-      });
-    }
-
-    document.getElementById("bp").addEventListener("input", syncQuickButtons);
-
-    function renderHistory() {
-      const historyList = document.getElementById("historyList");
-
-      if (historyData.length === 0) {
-        historyList.innerHTML = '<div class="history-item">아직 기록이 없습니다.</div>';
+      if (isNaN(stat) || stat < 1 || stat > 99) {
+        alert("기능치는 1~99 사이로 입력해 주세요.");
         return;
       }
 
-      historyList.innerHTML = historyData.map(item => `
-        <div class="history-item">
-          <strong>${item.statName}</strong> | 기능치 ${item.stat} | 결과 ${item.final} | ${item.judge}
-        </div>
-      `).join("");
-    }
-
-    function clearHistory() {
-      historyData = [];
-      renderHistory();
-    }
-
-    function roll() {
-      const errorBox = document.getElementById("error");
-      errorBox.textContent = "";
-
-      const statNameInput = document.getElementById("statName").value.trim();
-      const statName = statNameInput === "" ? "이름 없는 판정" : statNameInput;
-
-      const stat = Number(document.getElementById("stat").value);
-      const bp = Number(document.getElementById("bp").value);
-
-      if (!Number.isInteger(stat) || stat < 1 || stat > 99) {
-        errorBox.textContent = "기능치는 1~99 사이의 정수로 입력해 주세요.";
+      if (isNaN(bp) || bp < -2 || bp > 2) {
+        alert("보너스/패널티는 -2~2 사이로 입력해 주세요.");
         return;
       }
 
-      if (!Number.isInteger(bp) || bp < -2 || bp > 2) {
-        errorBox.textContent = "보너스/패널티는 -2~2 사이의 정수만 가능합니다.";
-        return;
+      resultBox.classList.remove("pop", "shake", "glow-success", "glow-fail");
+      judgeEl.innerText = "주사위를 굴리는 중...";
+      subtextEl.innerText = "잠시만요 ✨";
+
+      for (let i = 0; i < 10; i++) {
+        numberEl.innerText = Math.floor(Math.random() * 100) + 1;
+        await sleep(60);
       }
 
       const units = Math.floor(Math.random() * 10);
-      const tensList = [];
+      let tensList = [];
 
       for (let i = 0; i <= Math.abs(bp); i++) {
         tensList.push(Math.floor(Math.random() * 10) * 10);
       }
 
-      const results = tensList.map(tens => makeD100(tens, units));
-
-      let final;
-      if (bp > 0) {
-        final = Math.min(...results);
-      } else if (bp < 0) {
-        final = Math.max(...results);
-      } else {
-        final = results[0];
-      }
-
-      const judge = judgeResult(final, stat);
-
-      document.getElementById("badgeName").textContent = statName;
-      document.getElementById("badgeStat").textContent = `기능치 ${stat}`;
-      document.getElementById("badgeMode").textContent = modeText(bp);
-
-      document.getElementById("finalValue").textContent = final;
-      document.getElementById("judgeText").textContent = judge;
-
-      document.getElementById("detail1").textContent = `1의 자리: ${units}`;
-      document.getElementById("detail2").textContent = `10의 자리 후보: ${tensList.join(", ")}`;
-      document.getElementById("detail3").textContent = `가능한 결과값: ${results.join(", ")}`;
-
-      historyData.unshift({
-        statName,
-        stat,
-        final,
-        judge
+      let results = tensList.map(t => {
+        if (t === 0 && units === 0) return 100;
+        return t + units;
       });
 
-      if (historyData.length > 8) {
-        historyData.pop();
-      }
+      let final;
+      if (bp > 0) final = Math.min(...results);
+      else if (bp < 0) final = Math.max(...results);
+      else final = results[0];
 
-      renderHistory();
+      let text;
+      if (final === 1) text = "🌟 대성공";
+      else if (final === 100) text = "💥 대실패";
+      else if (final <= stat / 5) text = "✨ 극단적 성공";
+      else if (final <= stat / 2) text = "✅ 어려운 성공";
+      else if (final <= stat) text = "☑️ 보통 성공";
+      else text = "❌ 실패";
+
+      numberEl.innerText = final;
+      judgeEl.innerText = text;
+      subtextEl.innerText =
+        `1의 자리: ${units} | 10의 자리 후보: ${tensList.join(", ")} | 결과 후보: ${results.join(", ")}`;
+
+      void resultBox.offsetWidth;
+      resultBox.classList.add("pop");
+
+      if (text.includes("실패")) {
+        resultBox.classList.add("shake", "glow-fail");
+      } else {
+        resultBox.classList.add("glow-success");
+      }
     }
   </script>
+
 </body>
 </html>
