@@ -21,7 +21,7 @@
 
     .card {
       width: 100%;
-      max-width: 560px;
+      max-width: 620px;
       background: rgba(255, 255, 255, 0.9);
       border-radius: 24px;
       padding: 28px;
@@ -29,8 +29,15 @@
     }
 
     h1 {
-      margin: 0 0 24px;
+      margin: 0 0 10px;
       font-size: 2rem;
+    }
+
+    .subtitle {
+      margin: 0 0 24px;
+      color: #666b7d;
+      font-size: 0.95rem;
+      line-height: 1.5;
     }
 
     .field {
@@ -50,10 +57,22 @@
       border-radius: 14px;
       font-size: 1rem;
       outline: none;
+      background: white;
+    }
+
+    input:focus {
+      border-color: #8c7cff;
+      box-shadow: 0 0 0 4px rgba(140, 124, 255, 0.12);
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 8px;
     }
 
     button {
-      width: 100%;
       padding: 15px 18px;
       border: none;
       border-radius: 999px;
@@ -63,11 +82,22 @@
       font-weight: 800;
       cursor: pointer;
       box-shadow: 0 10px 24px rgba(123, 107, 202, 0.25);
+      transition: transform 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .sub-button {
+      background: #eef1fb;
+      color: #4f566f;
+      box-shadow: none;
     }
 
     .result-box {
       margin-top: 24px;
-      min-height: 120px;
+      min-height: 150px;
       border-radius: 20px;
       padding: 20px;
       background: linear-gradient(180deg, #ffffff, #f7f8ff);
@@ -78,10 +108,28 @@
       align-items: center;
     }
 
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+      justify-content: center;
+    }
+
+    .badge {
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #f1f3ff;
+      color: #50577a;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
     .number {
       font-size: 3rem;
       font-weight: 900;
       margin-bottom: 8px;
+      letter-spacing: -0.04em;
     }
 
     .judge {
@@ -95,6 +143,38 @@
       color: #666b7d;
       text-align: center;
       line-height: 1.5;
+    }
+
+    .history-box {
+      margin-top: 22px;
+      border-top: 1px dashed #d8dcec;
+      padding-top: 18px;
+    }
+
+    .history-title {
+      margin: 0 0 12px;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .history-item {
+      background: #f7f8ff;
+      border: 1px solid #e4e7f5;
+      border-radius: 16px;
+      padding: 12px 14px;
+      line-height: 1.5;
+      font-size: 0.93rem;
+      color: #50566c;
+    }
+
+    .history-empty {
+      color: #7b8195;
+      font-size: 0.93rem;
     }
 
     .pop {
@@ -127,11 +207,37 @@
       80% { transform: translateX(4px); }
       100% { transform: translateX(0); }
     }
+
+    @media (max-width: 640px) {
+      .card {
+        padding: 20px;
+      }
+
+      .number {
+        font-size: 2.4rem;
+      }
+
+      .button-row {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
   <div class="card">
     <h1>🎲 ORPG 1d100 판정기</h1>
+    <p class="subtitle">
+      판정 이름, 기능치, 보너스/패널티를 입력하고 주사위를 굴려 보세요.
+    </p>
+
+    <div class="field">
+      <label for="statName">판정 이름</label>
+      <input id="statName" type="text" placeholder="예: 관찰, 회피, 설득">
+    </div>
 
     <div class="field">
       <label for="stat">기능치 (1~99)</label>
@@ -143,16 +249,34 @@
       <input id="bp" type="number" min="-2" max="2" value="0">
     </div>
 
-    <button id="rollButton">굴리기</button>
+    <div class="button-row">
+      <button id="rollButton">굴리기</button>
+      <button class="sub-button" id="clearHistoryButton" type="button">기록 지우기</button>
+    </div>
 
     <div class="result-box" id="resultBox">
+      <div class="badge-row">
+        <div class="badge" id="badgeName">판정 이름 없음</div>
+        <div class="badge" id="badgeStat">기능치 -</div>
+        <div class="badge" id="badgeMode">일반</div>
+      </div>
+
       <div class="number" id="number">--</div>
       <div class="judge" id="judge">아직 판정 전입니다.</div>
       <div class="subtext" id="subtext">버튼을 눌러 주사위를 굴려 보세요.</div>
     </div>
+
+    <div class="history-box">
+      <div class="history-title">최근 기록</div>
+      <div class="history-list" id="historyList">
+        <div class="history-empty">아직 기록이 없습니다.</div>
+      </div>
+    </div>
   </div>
 
   <script>
+    const HISTORY_KEY = "orpg_d100_history";
+
     function sleep(ms) {
       return new Promise(function(resolve) {
         setTimeout(resolve, ms);
@@ -164,13 +288,76 @@
       return tens + units;
     }
 
+    function judgeResult(final, stat) {
+      if (final === 1) return "🌟 대성공";
+      if (final === 100) return "💥 대실패";
+      if (final <= Math.floor(stat / 5)) return "✨ 극단적 성공";
+      if (final <= Math.floor(stat / 2)) return "✅ 어려운 성공";
+      if (final <= stat) return "☑️ 보통 성공";
+      return "❌ 실패";
+    }
+
+    function modeText(bp) {
+      if (bp > 0) return "보너스 " + bp;
+      if (bp < 0) return "패널티 " + Math.abs(bp);
+      return "일반";
+    }
+
+    function loadHistory() {
+      try {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed;
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveHistory(history) {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    }
+
+    function renderHistory() {
+      const historyList = document.getElementById("historyList");
+      const history = loadHistory();
+
+      if (history.length === 0) {
+        historyList.innerHTML = '<div class="history-empty">아직 기록이 없습니다.</div>';
+        return;
+      }
+
+      historyList.innerHTML = history.map(function(item) {
+        return `
+          <div class="history-item">
+            <strong>${item.statName}</strong> | 기능치 ${item.stat} | ${item.mode}<br>
+            결과 ${item.final} → ${item.judge}<br>
+            <span style="color:#7a8094;">${item.detail}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function clearHistory() {
+      localStorage.removeItem(HISTORY_KEY);
+      renderHistory();
+    }
+
     async function roll() {
+      const statNameInput = document.getElementById("statName").value.trim();
+      const statName = statNameInput === "" ? "이름 없는 판정" : statNameInput;
       const stat = parseInt(document.getElementById("stat").value);
       const bp = parseInt(document.getElementById("bp").value);
+
       const numberEl = document.getElementById("number");
       const judgeEl = document.getElementById("judge");
       const subtextEl = document.getElementById("subtext");
       const resultBox = document.getElementById("resultBox");
+
+      const badgeName = document.getElementById("badgeName");
+      const badgeStat = document.getElementById("badgeStat");
+      const badgeMode = document.getElementById("badgeMode");
 
       if (isNaN(stat) || stat < 1 || stat > 99) {
         alert("기능치는 1~99 사이로 입력해 주세요.");
@@ -181,6 +368,10 @@
         alert("보너스/패널티는 -2~2 사이로 입력해 주세요.");
         return;
       }
+
+      badgeName.innerText = statName;
+      badgeStat.innerText = "기능치 " + stat;
+      badgeMode.innerText = modeText(bp);
 
       resultBox.classList.remove("pop", "shake", "glow-success", "glow-fail");
       judgeEl.innerText = "주사위를 굴리는 중...";
@@ -207,13 +398,7 @@
       else if (bp < 0) final = Math.max(...results);
       else final = results[0];
 
-      let text;
-      if (final === 1) text = "🌟 대성공";
-      else if (final === 100) text = "💥 대실패";
-      else if (final <= Math.floor(stat / 5)) text = "✨ 극단적 성공";
-      else if (final <= Math.floor(stat / 2)) text = "✅ 어려운 성공";
-      else if (final <= stat) text = "☑️ 보통 성공";
-      else text = "❌ 실패";
+      const text = judgeResult(final, stat);
 
       numberEl.innerText = final;
       judgeEl.innerText = text;
@@ -230,9 +415,29 @@
       } else {
         resultBox.classList.add("glow-success");
       }
+
+      const history = loadHistory();
+      history.unshift({
+        statName: statName,
+        stat: stat,
+        mode: modeText(bp),
+        final: final,
+        judge: text,
+        detail: "1의 자리 " + units + " / 후보 " + results.join(", ")
+      });
+
+      if (history.length > 8) {
+        history.pop();
+      }
+
+      saveHistory(history);
+      renderHistory();
     }
 
     document.getElementById("rollButton").addEventListener("click", roll);
+    document.getElementById("clearHistoryButton").addEventListener("click", clearHistory);
+
+    renderHistory();
   </script>
 </body>
 </html>
